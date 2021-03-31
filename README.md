@@ -50,7 +50,7 @@ where row and col are the coordinates of the upper left corner of the bounding b
 
 The three utlity function files are imported in the main file omr.py. Once the program is run, the main method reads the name of the input music image from the command line argument. The input PNG image corresponding to the name and all the templates are read. The method getResults() is called and the input image, all the templates along with the template factors (which have been predefined for test images in form of a dictionary) for each template are passed to the method. 
 
--> getResults() method
+**getResults()**
 
 Instances of the classes in the three utility files are created in the getResults() method. 
 
