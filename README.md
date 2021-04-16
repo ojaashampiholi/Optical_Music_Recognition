@@ -97,28 +97,18 @@ Inputs to this method are grayscale input image, resized grayscale template, typ
 
 ### **Template Matching** 
 
-**naiveTemplateMatching()**
-
-In this method, the pixels in the image and the template where the values are greater than 128 are substituted with 1 and others with 0. Threshold is calculated as the product of the confidence interval (passed as input to the method), height and width of the template. A similarity score between the image and the template is calculated using a function given in the question. This score evaluates how similar the region around coordinates (i,j) in image I is to the template. This function needs to be computed for each m×n - pixel neighborhood of the image. When the score is above the the threshold, the score along with the region of the image is added to a list named 'scorArr'.
-
-This scorArr list is subjected to non maximal suppression to avoid duplicate detection of the edges.
-
 **nonMaximalSupression()**
 
 This implementation is inspired from  https://github.com/amusi/Non-Maximum-Suppression/blob/master/nms.py
-Here, we consider the method of Intersection over Union (IoU) to determine the overlap between the bounding boxes and then set a upper threshold of 0.5 times the area. When the intersection is above 50%, it is safe to assume that the bounding boxes contain the same object.
+Here, we consider the method of Intersection over Union (IoU) to determine the overlap between the bounding boxes and then set a upper threshold of 0.5 times the area. When intersection is above 50%, it is safe to assume that bounding boxes contain same object.
 
-The matching regions in the image are returned to the omrApplication() method.
+**naiveTemplateMatching()**
 
-When the type of template matching is edge detection, the template is passed to getEdges() method in the template matching class to detect the edges of the template using sobel operators.
+In this method, the image and templates are converted to corresponding binary forms. Threshold is calculated as product of the confidence interval (passed as input to the method), height and width of template. This score evaluates how similar the region in image I is to template. This function needs to be computed for each m×n - pixel neighborhood of the image. When the score is above the the threshold, the score along with the region of the image is added to a list named 'scorArr'. This scorArr list is subjected to non maximal suppression to avoid duplicate detection of edges.
 
 **getEdges()**
 
-In this method, the separable sobel operators are used to find the gradients in the X and Y directions. The square root of the sum of the squares of the X and Y gradients give the edges of the template. Here, the edges which exceed the threshold value are substituted with 255 while others with 0. 
-
-The edges of the template are returned to the omrApplication() method.
-
-Since the type of matching is edge detection, max score here is calculated as the sum of the edges from the getEdges() method. The input image, template and the limiting factor as threshold are passed to the edgeDetectionTemplateMatching() method
+In this method, separable sobel operators are used to find gradients in X and Y directions. The square root of sum of squares of X and Y gradients give edges of template. Here, the pixels which exceed threshold value are substituted as edge pixels.
 
 **edgeDetectionTemplateMatching()**
 
