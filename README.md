@@ -48,7 +48,7 @@ where row and col are the coordinates of the upper left corner of the bounding b
 
 ### **Main file**
 
-The three utlity function files are imported in the main file omr.py. Once the program is run, the main method reads the name of the input music image from the command line argument. The input PNG image corresponding to the name and all the templates are read. The method getResults() is called and the input image, all the templates along with the template factors (which have been predefined for test images in form of a dictionary) for each template are passed to the method. 
+The three utlity function files are imported in the main file omr.py. Once the program is run, main method reads name of input music image from command line argument. The input PNG image and all the templates are read. The method getResults() is called and input image, templates along with corresponding template factors are passed to method. 
 
 **getResults()**
 
@@ -56,54 +56,44 @@ Instances of the classes in the three utility files are created in the getResult
 
 The input image is then converted to numpy array format for further operations followed by multiplying each channel in the RGB image array with specific weights - 0.2989 for red channel, 0.5870 for green channel and 0.1140 for blue channel to obtain the grayscale image using the 'rgbtogray()' method in the kernelOperations class.
 
-The hough transform is then performed on the grayscale image array to detect the staves and the estimate of the size of the note heads since the space between stave lines is approximately the height of a note head (used as a reference for rescaling). 
+Hough transform is then performed on the grayscale image array to detect staves and estimate of the size of note heads because space between stave lines is approximately height of a note head which is then used as a reference for rescaling. 
 
 ### **Hough Transform** 
 
 
 **hough()**
 
-This method takes in the grayscale image as input. The pixel values lesser than 128 are replaced with 0 while the rest of the pixels are replaced with 1 resulting in an image with 0s and 1s. Every pixel in the image is scanned and a vote dictionary named 'votesDict' is created with each row index as the key (x) and its value is increased by 1 for every pair of (x,y) with 0 pixel value, i.e black. Eack key value pair in the final 'votesDict' has the row index and the corresponding number of black pixels in that row. The list of rows, i.e the keys with values more than 50% of the column length (y) are then filtered from the dictionary. This filtering is based on the assumption that the staves are parallel, horizontal and continuous lines in the music image that stretches for more than 50% of its columns in the row. Thus, if a row index has more than 50% of continuous black pixels, it is considered to contain the stave line.
+This method takes grayscale image as input. The pixel values lesser than 128 are replaced with 0 while the rest of the pixels are replaced with 1 resulting in Binary Image. Every pixel in this image is scanned and vote dictionary named 'votesDict' is created with each row index as the key (x) and its value is increased by 1 for every pair of (row, height) that has an edge pixel. Eack key value pair in the final 'votesDict' has the row index and the corresponding number of white pixels in that row. The list of rows, i.e the keys with values more than 50% of the column length (y) are then filtered from the dictionary. This filtering is based on the assumption that the staves are parallel, horizontal and continuous lines in the music image that stretches for more than 50% of its columns in the row. Thus, if a row index has more than 50% of continuous white pixels, it can be considered a stave line.
 
-The row indices of the stave lines are in the filtered list l. We know from the theory that there is a fixed space between any two stave lines in a set and this space is the same across both the sets of staves. To find the space between two stave lines in a set, the difference between the row indices that are not immediately next to each other, i.e l[i]+1 != l[i] is determined. This difference gives the space between two stave lines. Once the space is determined, the loop is broken to avoid running until the length of the list 'l'. 
+The row indices of the stave lines are in the filtered list l. We know from the theory that there is a fixed space between any two stave lines in a set and this space is the same across the set of staves. To find the space between two stave lines in a set, the difference between the row indices that are not immediately next to each other is determined. This difference gives the space between two stave lines.
 
-Then, the row coordinate of the first stave lines in both the sets have to be found. We know that the first row index (or the first entry) in the filtered list l is the row coordinate of the first line in the first set. So, the l[0] is set as current line, the difference between the second row index in l, i.e l[1] and current line is calculated. If this difference is not 'greater than space * 2', the current line is updated to l[1] and the loop is continued to iterate over the next entry in the list i.e l[2]. This is continued until the condition (difference greater than two times the space) is satisfied. The row index which satisfies this condition is the row coordinate of the first line in the second set of staves.
+Further row coordinate of first stave lines in all sets have to be found. We know that the first row index (or the first entry) in the filtered list l is the row coordinate of the first line in the first set. We already know the space between the lines and the row coordinate of the first line. We loop through all the possible row candidates and see if they lie within 'space x 5' distance of the first row coordinate. If any line is found which is not within this bound, then we can assume that row is the first row for another set of stave lines. We keep checking the list till all of possible row candidates are either rejected or have been exhausted.
 
-Now, the space and the row coordinates of the first stave lines in both the sets have been determined using this hough() method. These values are returned to the getResults() method.
-
-Once the space between any two stave lines in a set and the row coordinates of the first two stave lines in both the sets are returned, another method named drawLines() is called from getResults(). 
+Now, the space and the row coordinates of the first stave lines in all sets have been determined using this hough() method, drawLines() method can be used to visualize the predicted staff lines.
 
 **drawLines()**
 
-This method takes in the grayscale image, space and the first row coordinates as the input. For every set of the stave lines, the row coordinates of the next four lines are determined using the first line row coordinate. first line row coordinate + j * space, where j ranges from 0 to 5. This is repeated for the other set too. The row coordinates of all the horizontal stave lines are added to a list named 'outArr'. Then, a copy image of the same shape as our grayscale input is initialized with all zeros. The pixel values of all the columns for the row coordinates in the outArr are set to 255, i.e black. 
-
-The outArr with the row coordinates of all the stave lines and the copy image array are returned to the getResults() method.
+This method takes in the grayscale image, space and the first row coordinates as the input. For every set of the stave lines, the row coordinates of the next four lines are determined using the first line row coordinate. This is repeated for the other set of first row coordinates. Then, copy image of same shape as our grayscale input is initialized with all zero values and pixel values of all row coordinates found previously are set to 255.
 
 The copy image when viewed in the getResults() method, is a black and white image with only the two sets of stave lines similar to the input music image. This copy image is stored as "detected_staves.png". 
 
-Once after the stave lines are detected, a Pitch Dictionary is created to find the kind of pitch. For this, the space and the first line row coordinates are passed to a method named getPitchDictionary() from getResults() method.
+Once after the stave lines are detected, a Pitch Dictionary is created to find the type of pitch. The space and first row coordinates are passed to a method named getPitchDictionary().
 
 **getPitchDictionary()**
 
-This method takes in the grayscale image, space and the first row coordinates as the input, similar to the drawLines() method. Types of the pitch from A through G for both the staves, are defined in the pitch dictionary based on the space, i.e the space between any two lines in a stave. For example, on the treble stave (the upper stave), the pitch that falls in the second space between the second and the third stave line is 'B'. Thus, to find pitch B, we use p[int(start line + dist * 2)] = 'B'. Similarly, other pitches can be found using the distance from the first line from the look up dictionary. 
-
-This look up dictionary is returned to the getResults() method.
-
-Once the above operations are finished, we read the templates and the resize() method is called by passing the template. The second argument passed to this method is the space multiplied by a template specific value. These template specific values are determined as follows. For example, if the template to be detected in the music image is the eighth-rest, then it spans over a length of twice the space between any two stave lines. Thus, the template specific value should be 2 * space. If the template to be detected is the quarter-rest, then it spans over approximately a length of thrice the space between any two stave lines. Thus, the template specific value should be 3 * space. 
+This method takes grayscale image, space and first row coordinates as inputs. Types of the pitch from A through G for both the staves, are defined in the pitch dictionary based on the space, i.e the space between any two lines in a stave. This look up dictionary is created for further use.
 
 **resizeTemplate()**
 
-In this method, a factor is calculated before resizing the template. The factor is calculated as (space * template specific value) / template.height. Here the numerator is passed as the second argument to the method. Based on the equation mentioned before, the factor is determined and the width and height of the template are multipled by this factor to carry out the resizing operation. 
+The resize() method is called by passing template image and scaling factor. The second argument passed to this method is space multiplied by a template specific value which are determined as follows. If template to be detected in music image is eighth-rest, then it spans over a length of twice the space between any two stave lines. Thus, template scaling factor should be 2 * space. If template to be detected is quarter-rest, then it spans over approximately a length of thrice the space between any two stave lines. Thus, template scaling factor should be 3 * space. 
 
-The resized template is returned to the getResults() method. The resized template is then converted to numpy array and converted to grayscale as we did for the input image.
+The resized template is returned for further use. The resized template is then converted to numpy array and converted to grayscale as we did for the input image for visualization purposes.
 
 All the above steps comprise the preprocessing, after which the omrApplication() method is called. 
 
 **omrApplication()**
 
-Inputs to this method are the grayscale input image, resized grayscale template, type of template matching (naive or edge detection based template matching), name of the template to be matched in the image (filled_note,quarter_rest or eighth_rest), pitch dictionary, space and arbitrary template specific limiting factor. 
-
-When the type of template matching is naive, the template, the input image and the limiting factor as confidence interval are passed to the naiveTemplateMatching() method in the template matching class. The max score for Naive Template matching is calculated as the product of the width and height of the template.
+Inputs to this method are grayscale input image, resized grayscale template, type of template matching (naive or edge detection based template matching), name of template to be matched in the image (filled_note,quarter_rest or eighth_rest), pitch dictionary, space and arbitrary template specific threshold factor.
 
 ### **Template Matching** 
 
