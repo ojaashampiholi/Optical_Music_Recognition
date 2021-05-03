@@ -128,7 +128,7 @@ class houghTransform():
                         pitch = p[start_x-q]
                 copy_image = Image.fromarray(np.uint8(copy_image))
                 draw = ImageDraw.Draw(copy_image)
-                font = ImageFont.truetype('C:/Users/ojaash/Desktop/images_and_sample-code/fonts/Lato-BoldItalic.ttf', 15) 
+                font = ImageFont.truetype('./Lato-BoldItalic.ttf', 15) 
                 draw.text((start_y-12, start_x-12),pitch,(1),font=font)
                 copy_image = np.array(copy_image)
             textArray.append([start_x, start_y, end_x, end_y, symbol_type, pitch, float(np.round(((score/maxScore)*100), 2))])
